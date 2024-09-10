@@ -1,81 +1,155 @@
 #include <cstdint>
-
-typedef unsigned long long size_t;
-
-extern "C" int scanf(const char*, ...);
-extern "C" int printf(const char*, ...);
-extern "C" void* malloc(size_t);
-extern "C" void free(void*);
-extern "C" int memcmp(const void*, const void*, size_t);
-extern "C" size_t strlen(const char* str);
-extern "C" int strcmp(const char*, const char*);
+#include <iostream>
+#include <string>
 
 #define ERROR 1
 
-typedef char surname_student[100];
-typedef char name_student[100];    
+typedef std::string surname_student;
+typedef std::string name_student;
 typedef uint8_t course_student;
 
-struct table_student {
+struct table_student 
+{
     name_student name;
     surname_student surname;
     course_student course;
 };
 
-table_student* ptr_to_struct = nullptr;
+struct node {
+    node* next;
+    table_student* ts;
+    node() : ts(new table_student), next(nullptr) 
+    {}
+    ~node() { delete ts; }
+};
 
-int set_student_table(size_t& SIZE) {
-    printf("Enter table size:\n");
-    scanf("%zu", &SIZE);
-    ptr_to_struct = (table_student*)malloc(sizeof(table_student) * SIZE);
-    if (ptr_to_struct == nullptr) {
-        printf("Memory allocation failed\n");
-        return ERROR;
+struct linked_list
+{
+private:
+    node* head;
+
+public:
+    linked_list() : head(nullptr)
+    {}
+
+    void set_value(node* tmp) 
+    {
+        std::cout << "Enter name for student\n";
+        std::getline(std::cin, tmp->ts->name);
+        std::cout << "Enter surname for student\n";
+        std::getline(std::cin, tmp->ts->surname);
+        std::cout << "Enter course for student\n";
+        std::cin >> tmp->ts->course;
+
+
     }
 
-    for (size_t i = 0; i < SIZE; ++i) {
-        printf("Enter name for student %zu:\n", i + 1);
-        scanf("%99s", ptr_to_struct[i].name);  
-        printf("Enter surname for student %zu:\n", i + 1);
-        scanf("%99s", ptr_to_struct[i].surname);  
-        printf("Enter course for student %zu:\n", i + 1);
-        scanf("%hhu", &ptr_to_struct[i].course);
-    }
-    return 0;
-}
+    void append()
+    {
+        node* new_node = new node;
+        set_value(new_node);
 
-int find_student(table_student* ptr_to_struct, size_t SIZE, name_student nm, surname_student snm) {
-    for (size_t i = 0; i < SIZE; ++i) {
-        if (strcmp(ptr_to_struct[i].name, nm) == 0 && 
-            strcmp(ptr_to_struct[i].surname, snm) == 0) {
-            printf("User found\n");
-            return 0;
+        if (head == nullptr) 
+        {
+            head = new_node;
+        }
+        else 
+        {
+            node* temp = head;
+            while (temp->next != nullptr) 
+            {
+                temp = temp->next;
+            }
+            temp->next = new_node;
         }
     }
-    return ERROR; 
-}
+
+    void start() 
+    {
+        while (true)
+        {
+            std::cout << "Enter '~' for break OR 'next' for next" << std::endl;
+            std::string temp_string;
+            std::getline(std::cin, temp_string);
+            if (temp_string == "~") 
+            {
+                return;
+            }
+            else if (temp_string == "next")
+            {
+                append();
+            }
+            temp_string.clear();
+
+        }
+    }
+
+    void finding_people_in_table() const 
+    {
+        std::string temp_name;
+        std::string temp_surname;
+        temp_name.clear();
+        temp_surname.clear();
+        
+        std::cout << "Enter people name: ";
+        std::getline(std::cin, temp_name);
+        std::cout << "Enter people surname: ";
+        std::getline(std::cin, temp_surname);
+
+        node* temp = head;
+        while (temp != nullptr)
+        {
+            if (temp->ts->name == temp_name && temp->ts->surname == temp_surname)
+            {
+                std::cout << "user found\n";
+                return;
+                temp = temp->next;
+            }
+
+        }
+        std::cout << "user not found\n";
+        return;
+    }
+
+    void print_list() const 
+    {
+        node* temp = head;
+        while (temp != nullptr) 
+        {
+            std::cout << "Name: " << temp->ts->name << std::endl;
+            std::cout << "Surname: " << temp->ts->surname << std::endl;
+            std::cout << "Course: " << temp->ts->course << std::endl;
+            std::cout << "\n";
+            temp = temp->next;
+        }
+    }
+
+    ~linked_list() 
+    {
+        while (head != nullptr) 
+        {
+            node* temp = head;
+            head = head->next;
+            delete temp;
+        }
+    }
+};
 
 int main() {
-    size_t SIZE = 0; 
-    uint8_t descriptor_set = set_student_table(SIZE);
-    if (descriptor_set != 0) {
-        printf("Error in set_student_table()\n");
-        return ERROR;
+    linked_list ln;
+    while (true)
+    {
+        std::string operation;
+        std::cout << "Enter |start| or |print| or |find|\n";
+        std::getline(std::cin, operation);
+        if (operation == "start") { ln.start(); }
+        else if (operation == "find") { ln.finding_people_in_table(); }
+        else if (operation == "print") {ln.print_list();}
+        else {
+            std::cout << "Error operation\n";
+        }
+        operation.clear();
     }
 
-    name_student buffer_name;
-    printf("Enter (name): \n");
-    scanf("%99s", buffer_name); 
-
-    surname_student buffer_surname; 
-    printf("Enter (surname): \n");
-    scanf("%99s", buffer_surname); 
-
-    uint8_t descriptor_find = find_student(ptr_to_struct, SIZE, buffer_name, buffer_surname);
-    if (descriptor_find == ERROR) {
-        printf("Not found\n");
-    }
-
-    free(ptr_to_struct);
     return 0;
 }
