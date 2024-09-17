@@ -1,155 +1,183 @@
-#include <cstdint>
+#define _CRT_SECURE_NO_WARNINGS
 #include <iostream>
-#include <string>
-
-#define ERROR 1
-
-typedef std::string surname_student;
-typedef std::string name_student;
-typedef uint8_t course_student;
-
-struct table_student 
-{
-    name_student name;
-    surname_student surname;
-    course_student course;
-};
-
-struct node {
-    node* next;
-    table_student* ts;
-    node() : ts(new table_student), next(nullptr) 
-    {}
-    ~node() { delete ts; }
-};
-
-struct linked_list
-{
-private:
-    node* head;
-
-public:
-    linked_list() : head(nullptr)
-    {}
-
-    void set_value(node* tmp) 
-    {
-        std::cout << "Enter name for student\n";
-        std::getline(std::cin, tmp->ts->name);
-        std::cout << "Enter surname for student\n";
-        std::getline(std::cin, tmp->ts->surname);
-        std::cout << "Enter course for student\n";
-        std::cin >> tmp->ts->course;
+#include <stdio.h>
+#include <string.h>
+#include <locale.h>
+#include <stdlib.h>
 
 
+#define MAX_NAME_LENGTH 50
+#define MAX_FACULTY_LENGTH 100
+
+typedef struct Student {
+    char lastName[MAX_NAME_LENGTH];
+    char firstName[MAX_NAME_LENGTH];
+    int course;
+    char faculty[MAX_FACULTY_LENGTH];
+    struct Student* next;
+} Student;
+
+Student* createStudent(const char* lastName, const char* firstName, int course, const char* faculty) {
+    Student* student = (Student*)malloc(sizeof(Student));
+    strcpy(student->lastName, lastName);
+    strcpy(student->firstName, firstName);
+    student->course = course;
+    strcpy(student->faculty, faculty);
+    student->next = NULL;
+    return student;
+}
+
+void printStudent(Student* student) {
+    printf("Фамилия: %s\n", student->lastName);
+    printf("Имя: %s\n", student->firstName);
+    printf("Курс: %d\n", student->course);
+    printf("Факультет: %s\n", student->faculty);
+}
+
+void addStudent(Student** head, Student* student) {
+    if (*head == NULL) {
+        *head = student;
     }
-
-    void append()
-    {
-        node* new_node = new node;
-        set_value(new_node);
-
-        if (head == nullptr) 
-        {
-            head = new_node;
+    else {
+        Student* current = *head;
+        while (current->next != NULL) {
+            current = current->next;
         }
-        else 
-        {
-            node* temp = head;
-            while (temp->next != nullptr) 
-            {
-                temp = temp->next;
+        current->next = student;
+    }
+}
+
+Student* findStudent(Student* head, const char* lastName, const char* firstName) {
+    Student* current = head;
+    while (current != NULL) {
+        if (strcmp(current->lastName, lastName) == 0 && strcmp(current->firstName, firstName) == 0) {
+            return current;
+        }
+        current = current->next;
+    }
+    return NULL;
+}
+
+void findStudentsByFirstName(Student* head, const char* firstName) {
+    Student* current = head;
+    int found = 0;
+    while (current != NULL) {
+        if (strcmp(current->firstName, firstName) == 0) {
+            if (!found) {
+                printf("Студенты с именем %s:\n", firstName);
+                found = 1;
             }
-            temp->next = new_node;
+            printStudent(current);
+            printf("\n");
         }
+        current = current->next;
     }
+    if (!found) {
+        printf("Студенты с именем %s не найдены.\n", firstName);
+    }
+}
 
-    void start() 
-    {
-        while (true)
-        {
-            std::cout << "Enter '~' for break OR 'next' for next" << std::endl;
-            std::string temp_string;
-            std::getline(std::cin, temp_string);
-            if (temp_string == "~") 
-            {
-                return;
+void findStudentsByLastName(Student* head, const char* lastName) {
+    Student* current = head;
+    int found = 0;
+    while (current != NULL) {
+        if (strcmp(current->lastName, lastName) == 0) {
+            if (!found) {
+                printf("Студенты с фамилией %s:\n", lastName);
+                found = 1;
             }
-            else if (temp_string == "next")
-            {
-                append();
-            }
-            temp_string.clear();
-
+            printStudent(current);
+            printf("\n");
         }
+        current = current->next;
     }
-
-    void finding_people_in_table() const 
-    {
-        std::string temp_name;
-        std::string temp_surname;
-        temp_name.clear();
-        temp_surname.clear();
-        
-        std::cout << "Enter people name: ";
-        std::getline(std::cin, temp_name);
-        std::cout << "Enter people surname: ";
-        std::getline(std::cin, temp_surname);
-
-        node* temp = head;
-        while (temp != nullptr)
-        {
-            if (temp->ts->name == temp_name && temp->ts->surname == temp_surname)
-            {
-                std::cout << "user found\n";
-                return;
-                temp = temp->next;
-            }
-
-        }
-        std::cout << "user not found\n";
-        return;
+    if (!found) {
+        printf("Студенты с фамилией %s не найдены.\n", lastName);
     }
+}
 
-    void print_list() const 
-    {
-        node* temp = head;
-        while (temp != nullptr) 
-        {
-            std::cout << "Name: " << temp->ts->name << std::endl;
-            std::cout << "Surname: " << temp->ts->surname << std::endl;
-            std::cout << "Course: " << temp->ts->course << std::endl;
-            std::cout << "\n";
-            temp = temp->next;
-        }
+void freeList(Student* head) {
+    Student* current = head;
+    while (current != NULL) {
+        Student* next = current->next;
+        free(current);
+        current = next;
     }
-
-    ~linked_list() 
-    {
-        while (head != nullptr) 
-        {
-            node* temp = head;
-            head = head->next;
-            delete temp;
-        }
-    }
-};
+}
 
 int main() {
-    linked_list ln;
-    while (true)
-    {
-        std::string operation;
-        std::cout << "Enter |start| or |print| or |find|\n";
-        std::getline(std::cin, operation);
-        if (operation == "start") { ln.start(); }
-        else if (operation == "find") { ln.finding_people_in_table(); }
-        else if (operation == "print") {ln.print_list();}
-        else {
-            std::cout << "Error operation\n";
+
+    setlocale(LC_ALL, "Russian");
+
+    Student* head = NULL;
+
+    while (1) {
+        char lastName[MAX_NAME_LENGTH];
+        char firstName[MAX_NAME_LENGTH];
+        int course;
+        char faculty[MAX_FACULTY_LENGTH];
+
+        printf("Введите фамилию студента (или '~' для завершения ввода): ");
+        scanf("%s", lastName);
+        if (strcmp(lastName, "~") == 0) {
+            break;
         }
-        operation.clear();
+
+        printf("Введите имя студента: ");
+        scanf("%s", firstName);
+        printf("Введите курс студента: ");
+        scanf("%d", &course);
+        printf("Введите факультет студента: ");
+        scanf("%s", faculty);
+
+        Student* student = createStudent(lastName, firstName, course, faculty);
+        addStudent(&head, student);
     }
+
+    char searchLastName[MAX_NAME_LENGTH];
+    char searchFirstName[MAX_NAME_LENGTH];
+
+    printf("\n\nВыберите операцию : \n");
+    printf("1. Поиск студента по имени и фамилии \n");
+    printf("2. Поиск студентов по имени \n");
+    printf("3. Поиск студентов по фамилии \n\n");
+
+    int operation;
+    std::cin >> operation;
+
+    if (operation == 1) {
+        printf("\nВведите фамилию студента для поиска: ");
+        scanf("%s", searchLastName);
+        printf("Введите имя студента для поиска: ");
+        scanf("%s", searchFirstName);
+
+        Student* foundStudent = findStudent(head, searchLastName, searchFirstName);
+
+        if (foundStudent != NULL) {
+            printf("Студент найден:\n");
+            printStudent(foundStudent);
+        }
+        else {
+            printf("Студент не найден.\n");
+        }
+    }
+    else if (operation == 2) {
+        printf("\n\nВведите имя студента для поиска: ");
+        scanf("%s", searchFirstName);
+        findStudentsByFirstName(head, searchFirstName);
+    }
+
+    else if (operation == 3) {
+        printf("\n\nВведите фамилию студента для поиска: ");
+        scanf("%s", searchLastName);
+        findStudentsByLastName(head, searchLastName);
+    }
+
+    else {
+        printf("\n\nНеверный выбор операции.\n");
+    }
+
+    freeList(head);
 
     return 0;
 }
